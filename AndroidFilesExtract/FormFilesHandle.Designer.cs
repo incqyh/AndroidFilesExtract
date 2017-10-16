@@ -57,43 +57,44 @@
             // 
             this.progressBar1.Location = new System.Drawing.Point(42, 438);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(485, 33);
+            this.progressBar1.Size = new System.Drawing.Size(835, 33);
             this.progressBar1.TabIndex = 31;
             // 
             // goToAnalyze
             // 
             this.goToAnalyze.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.goToAnalyze.Location = new System.Drawing.Point(452, 347);
+            this.goToAnalyze.Location = new System.Drawing.Point(847, 348);
             this.goToAnalyze.Name = "goToAnalyze";
             this.goToAnalyze.Size = new System.Drawing.Size(135, 42);
             this.goToAnalyze.TabIndex = 30;
             this.goToAnalyze.Text = "进入文件分析";
             this.goToAnalyze.UseVisualStyleBackColor = true;
-            this.goToAnalyze.Click += new System.EventHandler(this.goToAnalyze_Click);
+            this.goToAnalyze.Click += new System.EventHandler(this.GoToAnalyze_Click);
             // 
             // copyFiles
             // 
             this.copyFiles.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.copyFiles.Location = new System.Drawing.Point(452, 237);
+            this.copyFiles.Location = new System.Drawing.Point(847, 238);
             this.copyFiles.Name = "copyFiles";
             this.copyFiles.Size = new System.Drawing.Size(135, 43);
             this.copyFiles.TabIndex = 29;
             this.copyFiles.Text = "复制选中的文件";
             this.copyFiles.UseVisualStyleBackColor = true;
-            this.copyFiles.Click += new System.EventHandler(this.copyFiles_Click);
+            this.copyFiles.Click += new System.EventHandler(this.CopyFiles_Click);
             // 
             // fileTree
             // 
             this.fileTree.Location = new System.Drawing.Point(42, 157);
             this.fileTree.Name = "fileTree";
-            this.fileTree.Size = new System.Drawing.Size(177, 232);
+            this.fileTree.Size = new System.Drawing.Size(382, 232);
             this.fileTree.TabIndex = 28;
+            this.fileTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FileTree_AfterSelect);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label4.Location = new System.Drawing.Point(268, 139);
+            this.label4.Location = new System.Drawing.Point(465, 139);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(136, 16);
             this.label4.TabIndex = 27;
@@ -112,25 +113,27 @@
             // searchedFiles
             // 
             this.searchedFiles.FormattingEnabled = true;
+            this.searchedFiles.HorizontalScrollbar = true;
             this.searchedFiles.ItemHeight = 12;
-            this.searchedFiles.Location = new System.Drawing.Point(268, 157);
+            this.searchedFiles.Location = new System.Drawing.Point(465, 157);
             this.searchedFiles.Name = "searchedFiles";
-            this.searchedFiles.Size = new System.Drawing.Size(136, 232);
+            this.searchedFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.searchedFiles.Size = new System.Drawing.Size(342, 232);
             this.searchedFiles.TabIndex = 25;
             // 
             // searchPattern
             // 
             this.searchPattern.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.searchPattern.Location = new System.Drawing.Point(268, 73);
+            this.searchPattern.Location = new System.Drawing.Point(465, 73);
             this.searchPattern.Name = "searchPattern";
-            this.searchPattern.Size = new System.Drawing.Size(136, 26);
+            this.searchPattern.Size = new System.Drawing.Size(342, 26);
             this.searchPattern.TabIndex = 24;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label2.Location = new System.Drawing.Point(265, 54);
+            this.label2.Location = new System.Drawing.Point(462, 54);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(168, 16);
             this.label2.TabIndex = 23;
@@ -153,27 +156,26 @@
             this.currentPath.Name = "currentPath";
             this.currentPath.ReadOnly = true;
             this.currentPath.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.currentPath.Size = new System.Drawing.Size(177, 26);
+            this.currentPath.Size = new System.Drawing.Size(382, 26);
             this.currentPath.TabIndex = 21;
             this.currentPath.Tag = "";
-            this.currentPath.Text = "/";
             // 
             // startSearch
             // 
             this.startSearch.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.startSearch.Location = new System.Drawing.Point(452, 138);
+            this.startSearch.Location = new System.Drawing.Point(847, 139);
             this.startSearch.Name = "startSearch";
             this.startSearch.Size = new System.Drawing.Size(135, 38);
             this.startSearch.TabIndex = 20;
             this.startSearch.Text = "开始搜索";
             this.startSearch.UseVisualStyleBackColor = true;
-            this.startSearch.Click += new System.EventHandler(this.startSearch_Click);
+            this.startSearch.Click += new System.EventHandler(this.StartSearch_Click);
             // 
             // FormFilesHandle
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(627, 524);
+            this.ClientSize = new System.Drawing.Size(1040, 524);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.goToAnalyze);
