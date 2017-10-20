@@ -40,8 +40,8 @@ namespace AndroidFilesExtract
         {
             foreach (var item in searchedFiles.SelectedItems)
             {
-                string path = item.ToString();
-                AdbHelper.CopyFromDevice(AdbHelper.GetSerialNo(), path, "CopiedFiles");
+                string[] path = item.ToString().Split(new char[]{ ' '});
+                AdbHelper.CopyFromDevice(AdbHelper.GetSerialNo(), path[1], "CopiedFiles");
             }
         }
 
@@ -56,17 +56,18 @@ namespace AndroidFilesExtract
             TreeNode itNode = e.Node;
 
             Stack<string> perDir = new Stack<string>();
+            if (itNode.Parent == null)
             while (itNode.Parent != null)
             {
                 perDir.Push(itNode.Text);
                 itNode = itNode.Parent;
             }
             perDir.Push(itNode.Text);
-            string fullPath = "";
+            string fullPath = "/";
             while (perDir.Count != 0)
             {
                 if (perDir.Peek() != "/")
-                    fullPath += "/" + perDir.Peek();
+                    fullPath += perDir.Peek() + "/";
                 perDir.Pop();
             }
             currentPath.Text = fullPath;
