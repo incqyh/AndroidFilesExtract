@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 // using log4net;
 
-namespace AndroidFilesExtract
+namespace AdbHelper
 {
     /// <summary>
     /// Android Debug Bridge | Android Developers
@@ -115,8 +116,9 @@ namespace AndroidFilesExtract
         /// <param name="deviceNo"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static List<string>  ListDataFolder(string deviceNo, string path)
+        public static List<string>  ListDataFolder(string path)
         {
+            string deviceNo = GetSerialNo();
             var moreArgs = new[] { "su", "ls " + path, "exit", "exit" };
             var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
 
@@ -152,18 +154,41 @@ namespace AndroidFilesExtract
             return itemsList;
         }
 
-        public static List<string> SearchFiles(string deviceNo, string pattern, string path)
+        public static bool FileIsExist(string path)
         {
-            var Args = " shell find " + path + " -name \"" + pattern + "\" -exec stat -c \" %n %y\" {} \\;";
-            var result = ProcessHelper.Run(AdbExePath, Args);
+            List<string> l = ListDataFolder(path);
+            string pattern = "No such file or directory";
+            if (Regex.Matches(l[0], pattern).Count != 0)
+                return false;
+            return true;
+        }
 
+        public static List<string> SearchFiles(string pattern, string path)
+        {
+            string deviceNo = GetSerialNo();
+
+            string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\" -exec stat -c \" %n %y\" {} \\;", "exit", "exit" };
+            var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
+
+            var items = result.MoreOutputString[1].Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
             List<string> files = new List<string>();
-            if (result.OutputString != null)
+            foreach (var item in items)
             {
-                string[] items = result.OutputString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string item in items)
-                    files.Add(item);
+                var tmp = item.Trim();
+                //移除第一行，输入的命令
+                if (tmp.Contains(moreArgs[1]))
+                    continue;
+                //移除空白行
+                if (string.IsNullOrEmpty(tmp))
+                    continue;
+                //移除最后两行的root@android
+                if (tmp.ToLower().Contains("root@"))
+                    continue;
+                files.Add(tmp);
             }
+
+            files.Sort();
+
             return files;
         }
 
@@ -173,8 +198,9 @@ namespace AndroidFilesExtract
         /// <param name="deviceNo"></param>
         /// <param name="packageName"></param>
         /// <returns></returns>
-        public static List<string> ListDatabasesFolder(string deviceNo, string packageName)
+        public static List<string> ListDatabasesFolder(string packageName)
         {
+            string deviceNo = GetSerialNo();
             var path = string.Format("ls /data/data/{0}/databases", packageName);
 
             var moreArgs = new[] { "su", path, "exit", "exit" };
@@ -211,8 +237,9 @@ namespace AndroidFilesExtract
         /// <param name="devPath"></param>
         /// <param name="pcPath"></param>
         /// <returns></returns>
-        public static bool CopyFromDevice(string deviceNo, string devPath, string pcPath)
+        public static bool CopyFromDevice(string devPath, string pcPath)
         {
+            string deviceNo = GetSerialNo();
             //使用Pull命令将数据库拷贝到Pc上
             //adb pull [-p] [-a] <remote> [<local>]
             var result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} pull {1} {2}", deviceNo, devPath, pcPath));
@@ -234,8 +261,9 @@ namespace AndroidFilesExtract
         /// <param name="pcPath"></param>
         /// <param name="devPath"></param>
         /// <returns></returns>
-        public static bool CopyToDevice(string deviceNo, string pcPath, string devPath)
+        public static bool CopyToDevice(string pcPath, string devPath)
         {
+            string deviceNo = GetSerialNo();
             //adb push [-p] <local> <remote> 
             //- copy file/dir to device
             var result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} push {1} {2}", deviceNo, pcPath, devPath));
@@ -280,8 +308,9 @@ namespace AndroidFilesExtract
         /// <param name="deviceNo"></param>
         /// <param name="propKey"></param>
         /// <returns></returns>
-        public static string GetDeviceProp(string deviceNo, string propKey)
+        public static string GetDeviceProp(string propKey)
         {
+            string deviceNo = GetSerialNo();
             var result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} shell getprop {1}", deviceNo, propKey));
             return result.OutputString.Trim();
         }
@@ -290,45 +319,45 @@ namespace AndroidFilesExtract
         /// </summary>
         /// <param name="deviceNo"></param>
         /// <returns></returns>
-        public static string GetDeviceModel(string deviceNo)
+        public static string GetDeviceModel()
         {
-            return GetDeviceProp(deviceNo, "ro.product.model");
+            return GetDeviceProp("ro.product.model");
         }
         /// <summary>
         /// 牌子：[ro.product.brand]: [Huawei]
         /// </summary>
         /// <param name="deviceNo"></param>
         /// <returns></returns>
-        public static string GetDeviceBrand(string deviceNo)
+        public static string GetDeviceBrand()
         {
-            return GetDeviceProp(deviceNo, "ro.product.brand");
+            return GetDeviceProp("ro.product.brand");
         }
         /// <summary>
         /// 设备指纹：[ro.build.fingerprint]: [Huawei/U8860/hwu8860:2.3.6/HuaweiU8860/CHNC00B876:user/ota-rel-keys,release-keys]
         /// </summary>
         /// <param name="deviceNo"></param>
         /// <returns></returns>
-        public static string GetDeviceFingerprint(string deviceNo)
+        public static string GetDeviceFingerprint()
         {
-            return GetDeviceProp(deviceNo, "ro.build.fingerprint");
+            return GetDeviceProp("ro.build.fingerprint");
         }
         /// <summary>
         /// 系统版本：[ro.build.version.release]: [4.1.2]
         /// </summary>
         /// <param name="deviceNo"></param>
         /// <returns></returns>
-        public static string GetDeviceVersionRelease(string deviceNo)
+        public static string GetDeviceVersionRelease()
         {
-            return GetDeviceProp(deviceNo, "ro.build.version.release");
+            return GetDeviceProp("ro.build.version.release");
         }
         /// <summary>
         /// SDK版本：[ro.build.version.sdk]: [16]
         /// </summary>
         /// <param name="deviceNo"></param>
         /// <returns></returns>
-        public static string GetDeviceVersionSdk(string deviceNo)
+        public static string GetDeviceVersionSdk()
         {
-            return GetDeviceProp(deviceNo, "ro.build.version.sdk");
+            return GetDeviceProp("ro.build.version.sdk");
         }
         #endregion
     }

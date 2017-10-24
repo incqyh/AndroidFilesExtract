@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AndroidFilesExtract
+namespace AdbHelper
 {
     class SystemErrorCodes
     {
