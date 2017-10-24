@@ -43,7 +43,7 @@ namespace AdbHelper
         /// <summary>
         /// 读取数据的时候等待时间，等待时间过短时，可能导致读取不出正确的数据。
         /// </summary>
-        public static int WaitTime = 50;
+        public static int WaitTime = 1000;
 
         /// <summary>
         /// 连续运行模式，支持打开某程序后，持续向其输入命令，直到结束。

@@ -20,6 +20,7 @@ namespace AdbHelper
         /// adb.exe文件的路径，默认相对于当前应用程序目录取。
         /// </summary>
         public static string AdbExePath = "adb.exe";
+        public static string deviceNo;
         // {
         //     get
         //     {
@@ -118,7 +119,6 @@ namespace AdbHelper
         /// <returns></returns>
         public static List<string>  ListDataFolder(string path)
         {
-            string deviceNo = GetSerialNo();
             var moreArgs = new[] { "su", "ls " + path, "exit", "exit" };
             var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
 
@@ -165,8 +165,6 @@ namespace AdbHelper
 
         public static List<string> SearchFiles(string pattern, string path)
         {
-            string deviceNo = GetSerialNo();
-
             string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\" -exec stat -c \" %n %y\" {} \\;", "exit", "exit" };
             var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
 
@@ -200,7 +198,6 @@ namespace AdbHelper
         /// <returns></returns>
         public static List<string> ListDatabasesFolder(string packageName)
         {
-            string deviceNo = GetSerialNo();
             var path = string.Format("ls /data/data/{0}/databases", packageName);
 
             var moreArgs = new[] { "su", path, "exit", "exit" };
@@ -239,7 +236,6 @@ namespace AdbHelper
         /// <returns></returns>
         public static bool CopyFromDevice(string devPath, string pcPath)
         {
-            string deviceNo = GetSerialNo();
             //使用Pull命令将数据库拷贝到Pc上
             //adb pull [-p] [-a] <remote> [<local>]
             var result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} pull {1} {2}", deviceNo, devPath, pcPath));
@@ -263,7 +259,6 @@ namespace AdbHelper
         /// <returns></returns>
         public static bool CopyToDevice(string pcPath, string devPath)
         {
-            string deviceNo = GetSerialNo();
             //adb push [-p] <local> <remote> 
             //- copy file/dir to device
             var result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} push {1} {2}", deviceNo, pcPath, devPath));

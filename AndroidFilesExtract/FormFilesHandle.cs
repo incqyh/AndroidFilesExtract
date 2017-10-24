@@ -16,14 +16,24 @@ namespace AndroidFilesExtract
         public FormFilesHandle()
         {
             InitializeComponent();
-            InitializaFileTree();
+            InitializeFileTree();
+            InitializeDevideList();
         }
 
-        private void InitializaFileTree()
+        private void InitializeFileTree()
         {
+            AdbHelper.AdbHelper.deviceNo = AdbHelper.AdbHelper.GetSerialNo();
             TreeNode n = new TreeNode();
             n.Text = "/";
             fileTree.Nodes.Add(n);
+        }
+
+        private void InitializeDevideList()
+        {
+            AdbHelper.AdbHelper.StartServer();
+            string[] devices =  AdbHelper.AdbHelper.GetDevices();
+            foreach (string device in devices)
+                deviceList.Items.Add(device);
         }
 
         private void StartSearch_Click(object sender, EventArgs e)
@@ -42,7 +52,7 @@ namespace AndroidFilesExtract
             foreach (var item in searchedFiles.SelectedItems)
             {
                 string[] path = item.ToString().Split(new char[]{ ' '});
-                AdbHelper.AdbHelper.CopyFromDevice(path[1], "CopiedFiles");
+                AdbHelper.AdbHelper.CopyFromDevice(path[0], "CopiedFiles");
             }
         }
 
@@ -85,6 +95,11 @@ namespace AndroidFilesExtract
                     }
             }
             selNode.Expand();
+        }
+
+        private void connectDevice_Click(object sender, EventArgs e)
+        {
+            AdbHelper.AdbHelper.deviceNo = deviceList.Text;
         }
     }
 }
