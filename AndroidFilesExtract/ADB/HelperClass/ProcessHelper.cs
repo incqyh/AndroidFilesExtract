@@ -25,25 +25,41 @@ namespace AdbHelper
             return mProcess;
         }
 
+        /// <summary>
+        /// 读取数据的时候等待时间，等待时间过短时，可能导致读取不出正确的数据。
+        /// 读不到时等待一定的时间，每次等待后依然失败则下一次等待更长时间
+        /// </summary>
+        public static int[] WaitTime = new int[] {4, 8, 16, 32, 64, 128, 256, 512};
+
         private static string ReadStandardOutputLine(Process p)
         {
             var tmp = new StringBuilder();
 
+            Thread.Sleep(50);
             //当下一次读取时，Peek可能为-1，但此时缓冲区其实是有数据的。正常的Read一次之后，Peek就又有效了。
             if (p.StandardOutput.Peek() == -1)
-                tmp.Append((char)p.StandardOutput.Read());
-
-            while (p.StandardOutput.Peek() > -1)
             {
                 tmp.Append((char)p.StandardOutput.Read());
             }
+            // if (cnt == 10) break;
+
+            int cnt = 0;
+            while (true)
+            {
+                if (p.StandardOutput.Peek() == -1)
+                {
+                    Thread.Sleep(WaitTime[cnt]);
+                    cnt += 1;
+                }
+                if (cnt == 6) break;
+                while (p.StandardOutput.Peek() > -1)
+                {
+                    cnt = 0;
+                    tmp.Append((char)p.StandardOutput.Read());
+                }
+            }
             return tmp.ToString();
         }
-
-        /// <summary>
-        /// 读取数据的时候等待时间，等待时间过短时，可能导致读取不出正确的数据。
-        /// </summary>
-        public static int WaitTime = 1000;
 
         /// <summary>
         /// 连续运行模式，支持打开某程序后，持续向其输入命令，直到结束。
@@ -73,9 +89,6 @@ namespace AdbHelper
                     for (int i = 0; i < moreArgs.Length; i++)
                     {
                         p.StandardInput.WriteLine(moreArgs[i] + '\r');
-
-                        //必须等待一定时间，让程序运行一会儿，马上读取会读出空的值。
-                        Thread.Sleep(WaitTime);
 
                         result.MoreOutputString.Add(i, ReadStandardOutputLine(p));
                     }

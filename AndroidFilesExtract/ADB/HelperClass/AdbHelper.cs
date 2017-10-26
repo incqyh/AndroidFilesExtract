@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 // using log4net;
 
 namespace AdbHelper
@@ -117,114 +116,99 @@ namespace AdbHelper
         /// <param name="deviceNo"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static List<string>  ListDataFolder(string path)
+        // public static List<string>  ListDataFolder(string path)
+        // {
+        //     var moreArgs = new[] { "su", "ls " + path, "exit", "exit" };
+        //     var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
+
+        //     // m_log.Info("获取路径结果：" + result.ToString());
+
+        //     var itemsString = result.MoreOutputString[1];
+        //     var items = itemsString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+        //     var itemsList = new List<String>();
+        //     foreach (var item in items)
+        //     {
+        //         var tmp = item.Trim();
+        //         //移除第一行，输入的命令
+        //         if (tmp.Contains(moreArgs[1]))
+        //             continue;
+        //         //若有Permission denied证明没有该路径，直接退出
+        //         if (tmp.Contains(path + ": Permission denied"))
+        //             break;
+        //         //移除空白行
+        //         if (string.IsNullOrEmpty(tmp))
+        //             continue;
+        //         //移除最后两行的root@android
+        //         if (tmp.ToLower().Contains("root@") || tmp.ToLower().Contains("shell@"))
+        //             continue;
+        //         if (tmp.Equals("su") || tmp.Contains("su: not found"))//移除su
+        //             continue;
+        //         // itemsList.Add(path + tmp);
+        //         itemsList.Add(tmp);
+        //     }
+
+        //     itemsList.Sort();
+
+        //     return itemsList;
+        // }
+
+        public static string[]  ListDataFolder(string path, bool isVerbose = false)
         {
-            var moreArgs = new[] { "su", "ls " + path, "exit", "exit" };
-            var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
+            string args;
+            if (!isVerbose)
+                args = " -s " + deviceNo + " shell ls " + path;
+            else
+                args = " -s " + deviceNo + " shell ls -l " + path;
+            var result = ProcessHelper.Run(AdbExePath, args);
 
             // m_log.Info("获取路径结果：" + result.ToString());
-
-            var itemsString = result.MoreOutputString[1];
-            var items = itemsString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-            var itemsList = new List<String>();
-            foreach (var item in items)
-            {
-                var tmp = item.Trim();
-                //移除第一行，输入的命令
-                if (tmp.Contains(moreArgs[1]))
-                    continue;
-                //若有Permission denied证明没有该路径，直接退出
-                if (tmp.Contains(path + ": Permission denied"))
-                    break;
-                //移除空白行
-                if (string.IsNullOrEmpty(tmp))
-                    continue;
-                //移除最后两行的root@android
-                if (tmp.ToLower().Contains("root@") || tmp.ToLower().Contains("shell@"))
-                    continue;
-                if (tmp.Equals("su") || tmp.Contains("su: not found"))//移除su
-                    continue;
-                // itemsList.Add(path + tmp);
-                itemsList.Add(tmp);
-            }
-
-            itemsList.Sort();
-
-            return itemsList;
+            var items = result.OutputString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            return items;
         }
 
-        public static bool FileIsExist(string path)
+
+        // public static List<string> SearchFiles(string pattern, string path)
+        // {
+        //     // string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\" -exec stat -c \" %n %y\" {} \\;", "exit", "exit" };
+        //     string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\"", "exit", "exit"};
+        //     var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
+
+        //     var items = result.MoreOutputString[1].Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        //     List<string> files = new List<string>();
+        //     foreach (var item in items)
+        //     {
+        //         var tmp = item.Trim();
+        //         //移除第一行，输入的命令
+        //         if (tmp.Contains(moreArgs[1]))
+        //             continue;
+        //         //移除空白行
+        //         if (string.IsNullOrEmpty(tmp))
+        //             continue;
+        //         //移除最后两行的root@android
+        //         if (tmp.ToLower().Contains("root@"))
+        //             continue;
+        //         files.Add(tmp);
+        //     }
+
+        //     files.Sort();
+
+        //     return files;
+        // }
+
+        public static string[] SearchFiles(string pattern, string path = "/", string type = "")
         {
-            List<string> l = ListDataFolder(path);
-            string pattern = "No such file or directory";
-            if (Regex.Matches(l[0], pattern).Count != 0)
-                return false;
-            return true;
-        }
+            string initArgs = " -s " + deviceNo + " shell ";
+            string runArgs;
+            if (type == "")
+                runArgs = "\"find " + path + " -name \\\"" + pattern + "\\\"\"";
+            else 
+                runArgs = "\"find " + path + " -type " + type + " -name \\\"" + pattern + "\\\"\"";
 
-        public static List<string> SearchFiles(string pattern, string path)
-        {
-            string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\" -exec stat -c \" %n %y\" {} \\;", "exit", "exit" };
-            var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
+            var result = ProcessHelper.Run(AdbExePath, initArgs+runArgs);
 
-            var items = result.MoreOutputString[1].Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            List<string> files = new List<string>();
-            foreach (var item in items)
-            {
-                var tmp = item.Trim();
-                //移除第一行，输入的命令
-                if (tmp.Contains(moreArgs[1]))
-                    continue;
-                //移除空白行
-                if (string.IsNullOrEmpty(tmp))
-                    continue;
-                //移除最后两行的root@android
-                if (tmp.ToLower().Contains("root@"))
-                    continue;
-                files.Add(tmp);
-            }
-
-            files.Sort();
-
-            return files;
-        }
-
-        /// <summary>
-        /// 指定“包名”后，就将其目录下的数据库文件遍历出来。
-        /// </summary>
-        /// <param name="deviceNo"></param>
-        /// <param name="packageName"></param>
-        /// <returns></returns>
-        public static List<string> ListDatabasesFolder(string packageName)
-        {
-            var path = string.Format("ls /data/data/{0}/databases", packageName);
-
-            var moreArgs = new[] { "su", path, "exit", "exit" };
-            var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
-
-            var itemsString = result.MoreOutputString[1];
-            var items = itemsString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-            var itemsList = new List<String>();
-            foreach (var item in items)
-            {
-                var tmp = item.Trim();
-                //移除第一行，输入的命令
-                if (tmp.Contains(moreArgs[1]))
-                    continue;
-                //移除空白行
-                if (string.IsNullOrEmpty(tmp))
-                    continue;
-                //移除最后两行的root@android
-                if (tmp.ToLower().Contains("root@"))
-                    continue;
-                itemsList.Add(tmp);
-            }
-
-            itemsList.Sort();
-
-            return itemsList;
+            var items = result.OutputString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            return items;
         }
 
         /// <summary>

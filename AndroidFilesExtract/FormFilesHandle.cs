@@ -39,7 +39,7 @@ namespace AndroidFilesExtract
         private void StartSearch_Click(object sender, EventArgs e)
         {
             string pattern = searchPattern.Text;
-            List<string> files = AdbHelper.AdbHelper.SearchFiles(pattern, currentPath.Text);
+            var files = AdbHelper.AdbHelper.SearchFiles(pattern, currentPath.Text);
             searchedFiles.Items.Clear();
             foreach (string file in files)
             {
@@ -67,7 +67,6 @@ namespace AndroidFilesExtract
             TreeNode itNode = e.Node;
 
             Stack<string> perDir = new Stack<string>();
-            if (itNode.Parent == null)
             while (itNode.Parent != null)
             {
                 perDir.Push(itNode.Text);
@@ -83,9 +82,9 @@ namespace AndroidFilesExtract
             }
             currentPath.Text = fullPath;
 
-            if (AdbHelper.AdbHelper.StartServer() && selNode.Nodes.Count == 0)
+            if (selNode.Nodes.Count == 0)
             {
-                List<string> dir = AdbHelper.AdbHelper.ListDataFolder(fullPath);
+                var dir = AdbHelper.AdbHelper.ListDataFolder(fullPath);
                 if (dir[0][0] != '/')
                     foreach (var it in dir)
                     {
