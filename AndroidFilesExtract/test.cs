@@ -3,7 +3,10 @@ namespace AndroidFilesExtract
 {
     class TTT
     {
-    public
-        static string s = "hello world";
+        public static void fun1() { }
+        static void fun2()
+        {
+
+        }        
     }
 }

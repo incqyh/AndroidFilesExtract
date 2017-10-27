@@ -56,11 +56,6 @@ namespace AndroidFilesExtract
             }
         }
 
-        private void GoToAnalyze_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void FileTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             TreeNode selNode = e.Node;

@@ -46,10 +46,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ADB\HelperClass\AdbHelper.cs" />
-    <Compile Include="ADB\HelperClass\ProcessHelper.cs" />
-    <Compile Include="ADB\HelperClass\SystemErrorCodes.cs" />
-    <Compile Include="FileHandler.cs" />
+    <Compile Include="FileExtract\ADB\AdbHelper.cs" />
+    <Compile Include="FileExtract\ADB\ProcessHelper.cs" />
+    <Compile Include="FileExtract\ADB\SystemErrorCodes.cs" />
+    <Compile Include="FileExtract\FileHandler.cs" />
     <Compile Include="test.cs" />
     <Compile Include="FormFilesHandle.cs">
       <SubType>Form</SubType>

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
 // using log4net;
 
 namespace AdbHelper
@@ -110,56 +108,23 @@ namespace AdbHelper
             return itemsList.ToArray();
         }
 
-        /// <summary>
-        /// 获取指定的目录
-        /// </summary>
-        /// <param name="deviceNo"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        // public static List<string>  ListDataFolder(string path)
-        // {
-        //     var moreArgs = new[] { "su", "ls " + path, "exit", "exit" };
-        //     var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
-
-        //     // m_log.Info("获取路径结果：" + result.ToString());
-
-        //     var itemsString = result.MoreOutputString[1];
-        //     var items = itemsString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-        //     var itemsList = new List<String>();
-        //     foreach (var item in items)
-        //     {
-        //         var tmp = item.Trim();
-        //         //移除第一行，输入的命令
-        //         if (tmp.Contains(moreArgs[1]))
-        //             continue;
-        //         //若有Permission denied证明没有该路径，直接退出
-        //         if (tmp.Contains(path + ": Permission denied"))
-        //             break;
-        //         //移除空白行
-        //         if (string.IsNullOrEmpty(tmp))
-        //             continue;
-        //         //移除最后两行的root@android
-        //         if (tmp.ToLower().Contains("root@") || tmp.ToLower().Contains("shell@"))
-        //             continue;
-        //         if (tmp.Equals("su") || tmp.Contains("su: not found"))//移除su
-        //             continue;
-        //         // itemsList.Add(path + tmp);
-        //         itemsList.Add(tmp);
-        //     }
-
-        //     itemsList.Sort();
-
-        //     return itemsList;
-        // }
-
-        public static string[]  ListDataFolder(string path, bool isVerbose = false)
+        public static string[]  GetProperty(string path)
         {
-            string args;
-            if (!isVerbose)
-                args = " -s " + deviceNo + " shell ls " + path;
-            else
-                args = " -s " + deviceNo + " shell ls -l " + path;
+            string args = " -s " + deviceNo + " shell stat " + path;
+            var result = ProcessHelper.Run(AdbExePath, args);
+
+            var items = result.OutputString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            return items;
+        }
+
+        /// <summary>
+        /// 获取某目录下的文件
+        /// </summary>
+        /// <param name="path">路径</param>
+        /// <returns></returns>
+        public static string[]  ListDataFolder(string path)
+        {
+            string args = " -s " + deviceNo + " shell ls " + path;
             var result = ProcessHelper.Run(AdbExePath, args);
 
             // m_log.Info("获取路径结果：" + result.ToString());
@@ -167,35 +132,13 @@ namespace AdbHelper
             return items;
         }
 
-
-        // public static List<string> SearchFiles(string pattern, string path)
-        // {
-        //     // string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\" -exec stat -c \" %n %y\" {} \\;", "exit", "exit" };
-        //     string[] moreArgs = new[] { "su", "find " + path + " -name \"" + pattern + "\"", "exit", "exit"};
-        //     var result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
-
-        //     var items = result.MoreOutputString[1].Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-        //     List<string> files = new List<string>();
-        //     foreach (var item in items)
-        //     {
-        //         var tmp = item.Trim();
-        //         //移除第一行，输入的命令
-        //         if (tmp.Contains(moreArgs[1]))
-        //             continue;
-        //         //移除空白行
-        //         if (string.IsNullOrEmpty(tmp))
-        //             continue;
-        //         //移除最后两行的root@android
-        //         if (tmp.ToLower().Contains("root@"))
-        //             continue;
-        //         files.Add(tmp);
-        //     }
-
-        //     files.Sort();
-
-        //     return files;
-        // }
-
+        /// <summary>
+        /// 按指定要求搜索文件
+        /// </summary>
+        /// <param name="pattern">通配搜索符</param>
+        /// <param name="path">搜索路径</param>
+        /// <param name="type">搜索类型</param>
+        /// <returns></returns>
         public static string[] SearchFiles(string pattern, string path = "/", string type = "")
         {
             string initArgs = " -s " + deviceNo + " shell ";
@@ -231,52 +174,6 @@ namespace AdbHelper
                 return false;
                 throw new Exception("pull 执行返回的结果异常：" + result.OutputString);
             }
-            return true;
-        }
-
-        /// <summary>
-        /// 将文件拷贝到设备上（不适用于文件夹）
-        /// </summary>
-        /// <param name="deviceNo"></param>
-        /// <param name="pcPath"></param>
-        /// <param name="devPath"></param>
-        /// <returns></returns>
-        public static bool CopyToDevice(string pcPath, string devPath)
-        {
-            //adb push [-p] <local> <remote> 
-            //- copy file/dir to device
-            var result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} push {1} {2}", deviceNo, pcPath, devPath));
-            // m_log.Info("推送PAD时结果：" + result.ToString());
-
-            if (result.ExitCode != 0
-                || (result.OutputString.Contains("failed")
-                && result.OutputString.Contains("No such file or directory")))//若出现设备文件夹不存在的情况，则创建该文件夹
-            {
-                //构建拷贝后设备路径
-                int index1 = result.OutputString.IndexOf("failed to copy ");
-                //输出字符串：" failed to copy 'F:\padData\image\1.jpg' to 'sdcard/21at/output/image/1.jpg': No such file or directory"
-                string temp = result.OutputString.Substring(index1);
-                int index2 = temp.IndexOf(devPath);
-                int index3 = temp.IndexOf("': No such file or directory");
-                string devPath2 = temp.Substring(index2, index3 - index2);//设备图片路径
-                devPath2 = devPath2.Substring(0, devPath2.LastIndexOf('/'));
-                var moreArgs = new[] { "su", "mkdir -p "+ devPath2, "exit", "exit" };
-                //shell 方式创建文件夹
-                result = ProcessHelper.RunAsContinueMode(AdbExePath, string.Format("-s {0} shell", deviceNo), moreArgs);
-                // m_log.Info("创建文件夹：" + devPath2);
-                // m_log.Info("创建文件夹结果：" + result.ToString());
-                //再次推送该文件
-                result = ProcessHelper.Run(AdbExePath, string.Format("-s {0} push {1} {2}", deviceNo, pcPath, devPath));
-                // m_log.Info("再次推送PAD结果：" + result.ToString());
-            }
-            if (!result.Success
-                || result.ExitCode != 0
-                || (result.OutputString != null && result.OutputString.Contains("failed")))
-            {
-                return false;
-                throw new Exception("push 执行返回的结果异常：" + result.OutputString);
-            }
-
             return true;
         }
 

@@ -30,7 +30,6 @@
         {
             this.label5 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.goToAnalyze = new System.Windows.Forms.Button();
             this.copyFiles = new System.Windows.Forms.Button();
             this.fileTree = new System.Windows.Forms.TreeView();
             this.label4 = new System.Windows.Forms.Label();
@@ -64,17 +63,6 @@
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(835, 33);
             this.progressBar1.TabIndex = 31;
-            // 
-            // goToAnalyze
-            // 
-            this.goToAnalyze.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.goToAnalyze.Location = new System.Drawing.Point(848, 433);
-            this.goToAnalyze.Name = "goToAnalyze";
-            this.goToAnalyze.Size = new System.Drawing.Size(135, 42);
-            this.goToAnalyze.TabIndex = 30;
-            this.goToAnalyze.Text = "进入文件分析";
-            this.goToAnalyze.UseVisualStyleBackColor = true;
-            this.goToAnalyze.Click += new System.EventHandler(this.GoToAnalyze_Click);
             // 
             // copyFiles
             // 
@@ -236,7 +224,6 @@
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.progressBar1);
-            this.Controls.Add(this.goToAnalyze);
             this.Controls.Add(this.copyFiles);
             this.Controls.Add(this.fileTree);
             this.Controls.Add(this.label4);
@@ -258,7 +245,6 @@
 
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Button goToAnalyze;
         private System.Windows.Forms.Button copyFiles;
         private System.Windows.Forms.TreeView fileTree;
         private System.Windows.Forms.Label label4;
