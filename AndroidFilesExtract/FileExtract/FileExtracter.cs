@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace FileExtracter
 {
@@ -47,6 +48,10 @@ namespace FileExtracter
         public string errorMessage;
         public State state;
         public List<FileProperty> filesProperty;
+        public Result()
+        {
+            filesProperty = new List<FileProperty>();
+        }
     }
 
     /// <summary>
@@ -55,36 +60,43 @@ namespace FileExtracter
     interface FileExtracter
     {
         Result InitConnection();
-        Result GetFileInformation(string path);
-        Result ListDirecotry(string path);
-        Result SearchFiles(string path, string pattern, Type fileType);
-        Result CopyFileFromDevice(string devPath, string pcPath);
+        Result GetFileInformation(string device, string path);
+        Result ListDirecotry(string device, string path);
+        Result SearchFiles(string device, string path, string pattern, Type fileType);
+        Result CopyFileFromDevice(string device, string devivePath, string pcPath);
+        string[] Devices { get; }
     }
 
     class AdbFileExtracter:FileExtracter
     {
         string[] devices;
 
-        FileProperty GetProperty(string path)
+        public string[] Devices
+        {
+            get { return devices; }
+        }
+
+        FileProperty GetProperty(string device, string path)
         {
             FileProperty property = new FileProperty();
 
-            var items = AdbHelper.AdbHelper.ListDataFolder(path);
-            string pattern = "No such file or directory";
-            if (items[0].Contains(pattern))
+            var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
+            string errorPattern = "No such file or directory";
+            if (items.Length != 0 && items[0].Contains(errorPattern))
                 property.type = Type.fne;
             else
             {
-                var rawData = AdbHelper.AdbHelper.GetProperty(path);
+                var rawData = AdbHelper.AdbHelper.GetProperty(device, path);
                 property.path = path;
                 property.modifyTime = rawData[5].Substring(8, rawData[5].Length - 8);
                 property.accessTime = rawData[4].Substring(8, rawData[4].Length - 8);
-                string[] tmp = rawData[1].Split(' ');
-                property.size = tmp[1];
-                switch (tmp[7])
-                {
-                    case "symbolic":break;
-                }
+
+                if (rawData[1].Contains("directory")) property.type = Type.directory;
+                if (rawData[1].Contains("regular")) property.type = Type.file;
+                if (rawData[1].Contains("symbol")) property.type = Type.link;
+
+                string sizePattern = @"(?<=Size: )\d*\b";
+                property.size = Regex.Matches(rawData[1], sizePattern)[0].ToString();
             }
 
             return property;
@@ -100,28 +112,30 @@ namespace FileExtracter
                 {
                     result.success = false;
                     result.state = State.noConnection;
+                    result.errorMessage = "No device detected!";
                 }
                 else
                 {
                     result.success = true;
+                    devices = AdbHelper.AdbHelper.GetDevices();
                 }
 
             }
             catch (Exception ex)
             {
                 result.success = false;
+                result.state = State.noConnection;
                 result.errorMessage = ex.ToString();
             }
             return result;
         }
 
-        public Result GetFileInformation (string path)
+        public Result GetFileInformation (string device, string path)
         {
-
             Result result = new Result();
             try
             {
-                result.filesProperty.Add(GetProperty(path));
+                result.filesProperty.Add(GetProperty(device, path));
                 result.success = true;
             }
             catch (Exception ex)
@@ -133,18 +147,18 @@ namespace FileExtracter
         }
 
 
-        public Result ListDirecotry(string path)
+        public Result ListDirecotry(string device, string path)
         {
             Result result = new Result();
             try
             {
-                FileProperty property = GetProperty(path);
+                FileProperty property = GetProperty(device, path);
                 if (property.type == Type.directory)
                 {
-                    var items = AdbHelper.AdbHelper.ListDataFolder(path);
+                    var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
                     foreach(var item in items)
                     {
-                        property = GetProperty(path + "/" + item);
+                        property = GetProperty(device, path + "/" + item);
                         result.filesProperty.Add(property);
                     }
                     result.success = true;
@@ -164,16 +178,16 @@ namespace FileExtracter
 
         }
 
-        public Result SearchFiles(string path, string pattern, Type fileType)
+        public Result SearchFiles(string device, string path, string pattern, Type fileType)
         {
             Result result = new Result();
             try
             {
-                var items = AdbHelper.AdbHelper.SearchFiles(pattern, path, (char)fileType);
+                var items = AdbHelper.AdbHelper.SearchFiles(device, pattern, path, (char)fileType);
                 FileProperty property = new FileProperty();
                 foreach(var item in items)
                 {
-                    property = GetProperty(path + "/" + item);
+                    property = GetProperty(device, item);
                     result.filesProperty.Add(property);
                 }
                 result.success = true;
@@ -187,12 +201,12 @@ namespace FileExtracter
 
         }
 
-        public Result CopyFileFromDevice(string devPath, string pcPath)
+        public Result CopyFileFromDevice(string device, string devicePath, string pcPath)
         {
             Result result = new Result();
             try
             {
-                AdbHelper.AdbHelper.CopyFromDevice(devPath, pcPath);
+                AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, pcPath);
                 result.success = true;
             }
             catch (Exception ex)

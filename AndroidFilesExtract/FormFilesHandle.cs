@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AdbHelper;
+using System.Text.RegularExpressions;
 
 namespace AndroidFilesExtract
 {
@@ -16,85 +17,25 @@ namespace AndroidFilesExtract
         public FormFilesHandle()
         {
             InitializeComponent();
-            InitializeFileTree();
-            InitializeDevideList();
         }
 
-        private void InitializeFileTree()
+        private void test_Click(object sender, EventArgs e)
         {
-            AdbHelper.AdbHelper.deviceNo = AdbHelper.AdbHelper.GetSerialNo();
-            TreeNode n = new TreeNode();
-            n.Text = "/";
-            fileTree.Nodes.Add(n);
-        }
+            FileExtracter.FileExtracter feh = new FileExtracter.AdbFileExtracter();
+            feh.InitConnection();
+            var devices = feh.Devices;
+            foreach (string d in devices)
+                testView.Items.Add(d);
 
-        private void InitializeDevideList()
-        {
-            AdbHelper.AdbHelper.StartServer();
-            string[] devices =  AdbHelper.AdbHelper.GetDevices();
-            foreach (string device in devices)
-                deviceList.Items.Add(device);
-        }
+            string testDevice = "610510540122";
+            string testDir = "/data/data";
+            string testFile = "/init";
 
-        private void StartSearch_Click(object sender, EventArgs e)
-        {
-            string pattern = searchPattern.Text;
-            var files = AdbHelper.AdbHelper.SearchFiles(pattern, currentPath.Text);
-            searchedFiles.Items.Clear();
-            foreach (string file in files)
-            {
-                searchedFiles.Items.Add(file);
-            }
-        }
-
-        private void CopyFiles_Click(object sender, EventArgs e)
-        {
-            foreach (var item in searchedFiles.SelectedItems)
-            {
-                string[] path = item.ToString().Split(new char[]{ ' '});
-                AdbHelper.AdbHelper.CopyFromDevice(path[0], "CopiedFiles");
-            }
-        }
-
-        private void FileTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            TreeNode selNode = e.Node;
-            TreeNode itNode = e.Node;
-
-            Stack<string> perDir = new Stack<string>();
-            while (itNode.Parent != null)
-            {
-                perDir.Push(itNode.Text);
-                itNode = itNode.Parent;
-            }
-            perDir.Push(itNode.Text);
-            string fullPath = "/";
-            while (perDir.Count != 0)
-            {
-                if (perDir.Peek() != "/")
-                    fullPath += perDir.Peek() + "/";
-                perDir.Pop();
-            }
-            currentPath.Text = fullPath;
-
-            var test = AdbHelper.AdbHelper.GetProperty(fullPath);
-            if (selNode.Nodes.Count == 0)
-            {
-                var dir = AdbHelper.AdbHelper.ListDataFolder(fullPath);
-                if (dir[0][0] != '/')
-                    foreach (var it in dir)
-                    {
-                        TreeNode n = new TreeNode();
-                        n.Text = it;
-                        selNode.Nodes.Add(n);
-                    }
-            }
-            selNode.Expand();
-        }
-
-        private void connectDevice_Click(object sender, EventArgs e)
-        {
-            AdbHelper.AdbHelper.deviceNo = deviceList.Text;
+            var rd = feh.GetFileInformation(testDevice, testDir);
+            // var rf = feh.GetFileInformation(testDevice, testFile);
+            // var rl = feh.ListDirecotry(testDevice, testDir);
+            // var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+            // feh.CopyFileFromDevice(testDevice, "/data/data/com.kanke.tv", "CopiedFiles");
         }
     }
 }
