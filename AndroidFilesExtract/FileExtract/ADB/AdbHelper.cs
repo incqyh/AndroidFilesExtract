@@ -18,12 +18,6 @@ namespace AdbHelper
         /// </summary>
         public static string AdbExePath = "adb.exe";
         public static string deviceNo;
-        // {
-        //     get
-        //     {
-        //         return Path.Combine(Application.StartupPath, "AdbBin\\adb.exe");
-        //     }
-        // }
 
         /// <summary>
         /// 当前ADB状态：
@@ -139,11 +133,11 @@ namespace AdbHelper
         /// <param name="path">搜索路径</param>
         /// <param name="type">搜索类型</param>
         /// <returns></returns>
-        public static string[] SearchFiles(string pattern, string path = "/", string type = "")
+        public static string[] SearchFiles(string pattern, string path = "/", char type = ' ')
         {
             string initArgs = " -s " + deviceNo + " shell ";
             string runArgs;
-            if (type == "")
+            if (type == ' ')
                 runArgs = "\"find " + path + " -name \\\"" + pattern + "\\\"\"";
             else 
                 runArgs = "\"find " + path + " -type " + type + " -name \\\"" + pattern + "\\\"\"";

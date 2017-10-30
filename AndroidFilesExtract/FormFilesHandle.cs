@@ -77,6 +77,7 @@ namespace AndroidFilesExtract
             }
             currentPath.Text = fullPath;
 
+            var test = AdbHelper.AdbHelper.GetProperty(fullPath);
             if (selNode.Nodes.Count == 0)
             {
                 var dir = AdbHelper.AdbHelper.ListDataFolder(fullPath);

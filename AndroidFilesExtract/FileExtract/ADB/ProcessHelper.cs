@@ -28,45 +28,31 @@ namespace AdbHelper
         public static RunResult Run(string exePath, string args)
         {
             var result = new RunResult();
-            try
+
+            using (var p = GetProcess())
             {
-                using (var p = GetProcess())
-                {
-                    p.StartInfo.FileName = exePath;
-                    p.StartInfo.Arguments = args;
-                    p.Start();
+                p.StartInfo.FileName = exePath;
+                p.StartInfo.Arguments = args;
+                p.Start();
 
-                    //获取正常信息
-                    if (p.StandardOutput.Peek() > -1)
-                        result.OutputString = p.StandardOutput.ReadToEnd();
+                //获取正常信息
+                if (p.StandardOutput.Peek() > -1)
+                    result.OutputString = p.StandardOutput.ReadToEnd();
 
-                    //获取错误信息
-                    if (p.StandardError.Peek() > -1)
-                        result.OutputString = p.StandardError.ReadToEnd();
+                //获取错误信息
+                if (p.StandardError.Peek() > -1)
+                    result.OutputString = p.StandardError.ReadToEnd();
 
-                    // Do not wait for the child process to exit before
-                    // reading to the end of its redirected stream.
-                    // p.WaitForExit();
-                    // Read the output stream first and then wait.
-                    p.WaitForExit();
+                // Do not wait for the child process to exit before
+                // reading to the end of its redirected stream.
+                // p.WaitForExit();
+                // Read the output stream first and then wait.
+                p.WaitForExit();
 
-                    result.ExitCode = p.ExitCode;
-                    result.Success = true;
-                }
+                result.ExitCode = p.ExitCode;
+                result.Success = true;
             }
-            catch (Win32Exception ex)
-            {
-                result.Success = false;
 
-                //System Error Codes (Windows)
-                //http://msdn.microsoft.com/en-us/library/ms681382(v=vs.85).aspx
-                result.OutputString = string.Format("{0},{1}", ex.NativeErrorCode, SystemErrorCodes.ToString(ex.NativeErrorCode));
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.OutputString = ex.ToString();
-            }
             return result;
         }
 
