@@ -41,12 +41,12 @@ namespace FileExtracter
     /// <summary>
     /// 函数调用之后统一返回的结果类型
     /// </summary>
-    enum State { noConnection, copyFail, invalidInput, unexpectedOutput, fileNotExist};
+    // enum State { noConnection, copyFail, invalidInput, unexpectedOutput, fileNotExist};
     class Result
     {
         public bool success;
         public string errorMessage;
-        public State state;
+        // public State state;
         public List<FileProperty> filesProperty;
         public Result()
         {
@@ -110,9 +110,8 @@ namespace FileExtracter
                 devices = AdbHelper.AdbHelper.GetDevices();
                 if (devices.Length == 0)
                 {
-                    result.success = false;
-                    result.state = State.noConnection;
                     result.errorMessage = "No device detected!";
+                    throw new Exception();
                 }
                 else
                 {
@@ -124,7 +123,6 @@ namespace FileExtracter
             catch (Exception ex)
             {
                 result.success = false;
-                result.state = State.noConnection;
                 result.errorMessage = ex.ToString();
             }
             return result;
@@ -166,7 +164,6 @@ namespace FileExtracter
                 else
                 {
                     result.success = false;
-                    result.state = State.invalidInput;
                 }
             }
             catch (Exception ex)
