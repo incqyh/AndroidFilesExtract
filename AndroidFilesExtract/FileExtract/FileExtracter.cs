@@ -83,7 +83,7 @@ namespace FileExtracter
             var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
             string errorPattern = "No such file or directory";
             if (items.Length != 0 && items[0].Contains(errorPattern))
-                property.type = Type.fne;
+                throw new Exception("Wrong path!");
             else
             {
                 var rawData = AdbHelper.AdbHelper.GetProperty(device, path);
@@ -102,6 +102,13 @@ namespace FileExtracter
             return property;
         }
 
+        // List<FileProperty> GetProperties(string device, string[] paths)
+        // {
+        //     int threadNumber = 10;
+        //     List<FileProperty> properities = new List<FileProperty>();
+
+        // }
+
         public Result InitConnection()
         {
             Result result = new Result();
@@ -110,8 +117,7 @@ namespace FileExtracter
                 devices = AdbHelper.AdbHelper.GetDevices();
                 if (devices.Length == 0)
                 {
-                    result.errorMessage = "No device detected!";
-                    throw new Exception();
+                    throw new Exception("No device detected!");
                 }
                 else
                 {
@@ -163,7 +169,7 @@ namespace FileExtracter
                 }
                 else
                 {
-                    result.success = false;
+                    throw new Exception("Wrong path!");
                 }
             }
             catch (Exception ex)
@@ -203,6 +209,7 @@ namespace FileExtracter
             Result result = new Result();
             try
             {
+                GetProperty(device, devicePath);
                 AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, pcPath);
                 result.success = true;
             }

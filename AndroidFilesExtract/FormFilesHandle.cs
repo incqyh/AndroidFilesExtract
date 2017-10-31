@@ -33,8 +33,8 @@ namespace AndroidFilesExtract
 
             var rd = feh.GetFileInformation(testDevice, testDir);
             // var rf = feh.GetFileInformation(testDevice, testFile);
-            // var rl = feh.ListDirecotry(testDevice, testDir);
-            // var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+            var rl = feh.ListDirecotry(testDevice, testDir);
+            var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
             // feh.CopyFileFromDevice(testDevice, "/data/data/com.kanke.tv", "CopiedFiles");
         }
     }
