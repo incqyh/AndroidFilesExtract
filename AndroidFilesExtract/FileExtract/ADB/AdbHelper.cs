@@ -112,6 +112,7 @@ namespace AdbHelper
             path = path.Replace("&", "\\&");
             path = path.Replace("|", "\\|");
             path = path.Replace(">", "\\>");
+            path = path.Replace(" ", "\\ ");
             return path;
         }
 

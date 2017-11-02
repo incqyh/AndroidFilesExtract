@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace FileExtracter
 {
@@ -102,12 +103,20 @@ namespace FileExtracter
             return property;
         }
 
-        // List<FileProperty> GetProperties(string device, string[] paths)
-        // {
-        //     int threadNumber = 10;
-        //     List<FileProperty> properities = new List<FileProperty>();
-
-        // }
+        List<FileProperty> GetProperties(string device, string[] paths)
+        {
+            List<FileProperty> properties = new List<FileProperty>();
+            List<Task> tasks = new List<Task>();
+            foreach (var path in paths)
+            {
+                Task t = Task.Run(() => {
+                    properties.Add(GetProperty(device, path));
+                });
+                tasks.Add(t);
+            }
+            Task.WaitAll(tasks.ToArray());
+            return properties;
+        }
 
         public Result InitConnection()
         {
@@ -160,11 +169,16 @@ namespace FileExtracter
                 if (property.type == Type.directory)
                 {
                     var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
-                    foreach(var item in items)
+                    for (int i = 0; i < items.Length; ++i)
                     {
-                        property = GetProperty(device, path + "/" + item);
-                        result.filesProperty.Add(property);
+                        items[i] = path + "/" + items[i];
                     }
+                    // foreach(var item in paths)
+                    // {
+                    //     property = GetProperty(device, path + "/" + item);
+                    //     result.filesProperty.Add(property);
+                    // }
+                    result.filesProperty = GetProperties(device, items);
                     result.success = true;
                 }
                 else
@@ -187,12 +201,13 @@ namespace FileExtracter
             try
             {
                 var items = AdbHelper.AdbHelper.SearchFiles(device, pattern, path, (char)fileType);
-                FileProperty property = new FileProperty();
-                foreach(var item in items)
-                {
-                    property = GetProperty(device, item);
-                    result.filesProperty.Add(property);
-                }
+                // FileProperty property = new FileProperty();
+                // foreach(var item in items)
+                // {
+                //     property = GetProperty(device, item);
+                //     result.filesProperty.Add(property);
+                // }
+                result.filesProperty = GetProperties(device, items);
                 result.success = true;
             }
             catch (Exception ex)

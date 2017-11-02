@@ -28,6 +28,7 @@ namespace AndroidFilesExtract
                 testView.Items.Add(d);
 
             string testDevice = "610510540122";
+            // string testDevice = "127.0.0.1:26944";
             string testDir = "/data/data";
             string testFile = "/init";
 
