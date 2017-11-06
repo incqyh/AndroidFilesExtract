@@ -100,7 +100,7 @@ namespace FileExtracter
                 string sizePattern = @"(?<=Size: )\d*\b";
                 property.size = Regex.Matches(rawData[i + 1], sizePattern)[0].ToString();
                 string pathPattern = @"(?<=File: ).*";
-                property.path = Regex.Matches(rawData[i], pathPattern)[0].ToString();
+                property.path = Regex.Matches(rawData[i], pathPattern)[0].ToString().Replace("'","");
 
                 result.Add(property);
             }
@@ -320,93 +320,4 @@ namespace FileExtracter
             return result;
         }
     }
-
-    /*
-    /// <summary>
-    /// 先将所有的文件拷到本地，再进行分析
-    /// </summary>
-    class CopyFirstFileExtracter:FileExtracter
-    {
-        string[] devices;
-
-        public string[] Devices
-        {
-            get { return devices; }
-        }
-
-        FileProperty GetProperty(string device, string path)
-        {
-            FileProperty property = new FileProperty();
-            return property;
-        }
-
-        List<FileProperty> GetProperties(string device, string[] paths)
-        {
-            List<FileProperty> properties = new List<FileProperty>();
-            return properties;
-        }
-
-        public Result InitConnection()
-        {
-            Result result = new Result();
-            try
-            {
-                devices = AdbHelper.AdbHelper.GetDevices();
-                if (devices.Length == 0)
-                {
-                    throw new Exception("No device detected!");
-                }
-                else
-                {
-                    result.success = true;
-                    devices = AdbHelper.AdbHelper.GetDevices();
-                }
-
-            }
-            catch (Exception ex)
-            {
-                result.success = false;
-                result.errorMessage = ex.ToString();
-            }
-            return result;
-        }
-
-        public Result GetFileInformation (string device, string path)
-        {
-            Result result = new Result();
-            return result;
-        }
-
-
-        public Result ListDirecotry(string device, string path)
-        {
-            Result result = new Result();
-            return result;
-
-        }
-
-        public Result SearchFiles(string device, string path, string pattern, Type fileType)
-        {
-            Result result = new Result();
-            return result;
-        }
-
-        public Result CopyFileFromDevice(string device, string devicePath, string pcPath)
-        {
-            Result result = new Result();
-            try
-            {
-                GetProperty(device, devicePath);
-                AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, pcPath);
-                result.success = true;
-            }
-            catch (Exception ex)
-            {
-                result.success = false;
-                result.errorMessage = ex.ToString();
-            }
-            return result;
-        }
-    }
-    */
 }

@@ -17,12 +17,12 @@ public class Example
         string testDir = "/data/data";
         string testFile = "/init";
 
-        var rd = feh.GetFileInformation(testDevice, testDir);
-        var rf = feh.GetFileInformation(testDevice, testFile);
-        var rl = feh.ListDirecotry(testDevice, testDir);
-        var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
-        var rlv = feh.ListDirecotryVerbose(testDevice, testDir);
-        var rsv = feh.SearchFilesVerbose(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+        // var rd = feh.GetFileInformation(testDevice, testDir);
+        // var rf = feh.GetFileInformation(testDevice, testFile);
+        // var rl = feh.ListDirecotry(testDevice, testDir);
+        // var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+        // var rlv = feh.ListDirecotryVerbose(testDevice, testDir);
+        // var rsv = feh.SearchFilesVerbose(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
         feh.CopyFileFromDevice(testDevice, "/data/data/com.kanke.tv", "CopiedFiles");
     }
 }
