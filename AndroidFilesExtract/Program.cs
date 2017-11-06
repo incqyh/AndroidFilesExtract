@@ -12,18 +12,17 @@ public class Example
         feh.InitConnection();
         var devices = feh.Devices;
 
-        string testDevice = "610510540122";
-        // string testDevice = "127.0.0.1:26944";
+        string testDevice = "610510540122"; // 小米盒子
+        // string testDevice = "127.0.0.1:26944"; // 模拟器
         string testDir = "/data/data";
         string testFile = "/init";
 
-        // string[] testPaths = new string[2] { "/data", "/vendor"};
         var rd = feh.GetFileInformation(testDevice, testDir);
         var rf = feh.GetFileInformation(testDevice, testFile);
-        // var rl = feh.ListDirecotry(testDevice, testDir);
-        // var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
-        // var rlv = feh.ListDirecotryVerbose(testDevice, testDir);
-        // var rsv = feh.SearchFilesVerbose(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+        var rl = feh.ListDirecotry(testDevice, testDir);
+        var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+        var rlv = feh.ListDirecotryVerbose(testDevice, testDir);
+        var rsv = feh.SearchFilesVerbose(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
         feh.CopyFileFromDevice(testDevice, "/data/data/com.kanke.tv", "CopiedFiles");
     }
 }

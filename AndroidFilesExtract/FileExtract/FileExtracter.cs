@@ -84,8 +84,11 @@ namespace FileExtracter
         {
             List<FileProperty> result = new List<FileProperty>();
 
-            for (int i = 0; i < rawData.Length; i += 7)
+            for (int i = 0; i < rawData.Length - 6; i += 7)
             {
+                if (rawData[i].Contains("No such file or directory")) continue;
+                if (!rawData[i].Contains("File")) continue;
+
                 FileProperty property = new FileProperty();
                 property.modifyTime = rawData[i + 5].Substring(8, rawData[5].Length - 8);
                 property.accessTime = rawData[i + 4].Substring(8, rawData[4].Length - 8);
