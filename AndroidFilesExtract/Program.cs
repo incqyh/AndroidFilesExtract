@@ -2,15 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
-using System.Data;
-using System.Text.RegularExpressions;
 
 public class Example
 {
     public static void Main()
     {
-        FileExtracter.FileExtracter feh = new FileExtracter.AdbFileExtracter();
+        FileExtracter.FileExtracter feh = new FileExtracter.ShellScriptFileExtracter();
+
         feh.InitConnection();
         var devices = feh.Devices;
 
@@ -19,10 +17,13 @@ public class Example
         string testDir = "/data/data";
         string testFile = "/init";
 
-        var rd = feh.GetFileInformation(testDevice, testDir);
+        // string[] testPaths = new string[2] { "/data", "/vendor"};
+        // var rd = feh.GetFileInformation(testDevice, testDir);
         // var rf = feh.GetFileInformation(testDevice, testFile);
-        var rl = feh.ListDirecotry(testDevice, testDir);
-        var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
-        // feh.CopyFileFromDevice(testDevice, "/data/data/com.kanke.tv", "CopiedFiles");
+        // var rl = feh.ListDirecotry(testDevice, testDir);
+        // var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+        // var rlv = feh.ListDirecotryVerbose(testDevice, testDir);
+        // var rsv = feh.SearchFilesVerbose(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
+        feh.CopyFileFromDevice(testDevice, "/data/data/com.kanke.tv", "CopiedFiles");
     }
 }

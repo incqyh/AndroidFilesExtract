@@ -15,7 +15,7 @@ namespace FileExtracter
     /// </summary>
     public enum Type
     {
-        alltype = ' ',
+        alltype = 'a',
         fne = 'w', // file not exist
 
         directory = 'd',
@@ -49,6 +49,7 @@ namespace FileExtracter
         public string errorMessage;
         // public State state;
         public List<FileProperty> filesProperty;
+        public List<string> filesName;
         public Result()
         {
             filesProperty = new List<FileProperty>();
@@ -64,11 +65,13 @@ namespace FileExtracter
         Result GetFileInformation(string device, string path);
         Result ListDirecotry(string device, string path);
         Result SearchFiles(string device, string path, string pattern, Type fileType);
+        Result ListDirecotryVerbose(string device, string path);
+        Result SearchFilesVerbose(string device, string path, string pattern, Type fileType);
         Result CopyFileFromDevice(string device, string devivePath, string pcPath);
         string[] Devices { get; }
     }
 
-    class AdbFileExtracter:FileExtracter
+    class ShellScriptFileExtracter : FileExtracter
     {
         string[] devices;
 
@@ -103,18 +106,237 @@ namespace FileExtracter
             return property;
         }
 
+        List<FileProperty> ParaseProperties(string[] rawData)
+        {
+            List<FileProperty> result = new List<FileProperty>();
+
+            for (int i = 0; i < rawData.Length; i += 7)
+            {
+                FileProperty property = new FileProperty();
+                property.modifyTime = rawData[i + 5].Substring(8, rawData[5].Length - 8);
+                property.accessTime = rawData[i + 4].Substring(8, rawData[4].Length - 8);
+
+                if (rawData[i + 1].Contains("directory")) property.type = Type.directory;
+                if (rawData[i + 1].Contains("regular")) property.type = Type.file;
+                if (rawData[i + 1].Contains("symbol")) property.type = Type.link;
+
+                string sizePattern = @"(?<=Size: )\d*\b";
+                property.size = Regex.Matches(rawData[i + 1], sizePattern)[0].ToString();
+                string pathPattern = @"(?<=File: ).*";
+                property.path = Regex.Matches(rawData[i], pathPattern)[0].ToString();
+
+                result.Add(property);
+            }
+            return result;
+        }
+
+        public Result InitConnection()
+        {
+            Result result = new Result();
+            try
+            {
+                devices = AdbHelper.AdbHelper.GetDevices();
+                if (devices.Length == 0)
+                {
+                    throw new Exception("No device detected!");
+                }
+                else
+                {
+                    result.success = true;
+                    devices = AdbHelper.AdbHelper.GetDevices();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+        }
+
+        public Result GetFileInformation(string device, string path)
+        {
+            Result result = new Result();
+            try
+            {
+                result.filesProperty.Add(GetProperty(device, path));
+                result.success = true;
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+        }
+
+        public Result ListDirecotry(string device, string path)
+        {
+            Result result = new Result();
+            try
+            {
+                FileProperty property = GetProperty(device, path);
+                if (property.type == Type.directory)
+                {
+                    result.filesName = new List<string>();
+                    foreach (string file in AdbHelper.AdbHelper.ListDataFolder(device, path))
+                        result.filesName.Add(file);
+                    result.success = true;
+                }
+                else
+                {
+                    throw new Exception("Wrong path!");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+
+        }
+
+        public Result SearchFiles(string device, string path, string pattern, Type fileType)
+        {
+            Result result = new Result();
+            try
+            {
+                result.filesName = new List<string>();
+                foreach (string file in AdbHelper.AdbHelper.SearchFiles(device, pattern, path, (char)fileType))
+                    result.filesName.Add(file);
+                result.success = true;
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+
+        }
+
+        public Result ListDirecotryVerbose(string device, string path)
+        {
+            string listScript;
+            if (path == "/")
+            {
+                listScript = System.String.Format(
+                                                  "ls {0}|while read i;do " +
+                                                  "echo \\\"$(stat \\\"/$i\\\")\\\";" +
+                                                  "done", path);
+            }
+            else
+            {
+                listScript = System.String.Format(
+                                                  "ls {0}|while read i;do " +
+                                                  "echo \\\"$(stat \\\"{0}/$i\\\")\\\";" +
+                                                  "done", path);
+            }
+
+            // string scriptName = "/sdcard/utils/list" + path.Replace('/', '_');
+            Result result = new Result();
+            try
+            {
+                FileProperty property = GetProperty(device, path);
+                if (property.type == Type.directory)
+                {
+                    var properities = AdbHelper.AdbHelper.RunShell(device, listScript);
+                    result.filesProperty = ParaseProperties(properities);
+                    result.success = true;
+                }
+                else
+                {
+                    throw new Exception("Wrong path!");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+
+        }
+
+        public Result SearchFilesVerbose(string device, string path, string pattern, Type fileType)
+        {
+            string searchScript;
+            if (fileType == Type.alltype)
+            {
+                searchScript = System.String.Format(
+                                                   "find {0} -name \\\"{1}\\\"|" +
+                                                   "while read i;do " +
+                                                   "echo \\\"$(stat \\\"$i\\\")\\\"; " +
+                                                   "done", path, pattern);
+            }
+            else
+            {
+                searchScript = System.String.Format(
+                                                   "find {0} -name \\\"{1}\\\" -type {2}|" +
+                                                   "while read i;do " +
+                                                   "echo \\\"$(stat \\\"$i\\\")\\\"; " +
+                                                   "done", path, pattern, (char)fileType);
+            }
+            // string scriptName = "/sdcard/utils/search" + path.Replace('/', '_');
+
+            Result result = new Result();
+            try
+            {
+                var properities = AdbHelper.AdbHelper.RunShell(device, searchScript);
+                result.filesProperty = ParaseProperties(properities);
+                result.success = true;
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+
+        }
+
+        public Result CopyFileFromDevice(string device, string devicePath, string pcPath)
+        {
+            Result result = new Result();
+            try
+            {
+                GetProperty(device, devicePath);
+                AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, pcPath);
+                result.success = true;
+            }
+            catch (Exception ex)
+            {
+                result.success = false;
+                result.errorMessage = ex.ToString();
+            }
+            return result;
+        }
+    }
+
+    /*
+    /// <summary>
+    /// 先将所有的文件拷到本地，再进行分析
+    /// </summary>
+    class CopyFirstFileExtracter:FileExtracter
+    {
+        string[] devices;
+
+        public string[] Devices
+        {
+            get { return devices; }
+        }
+
+        FileProperty GetProperty(string device, string path)
+        {
+            FileProperty property = new FileProperty();
+            return property;
+        }
+
         List<FileProperty> GetProperties(string device, string[] paths)
         {
             List<FileProperty> properties = new List<FileProperty>();
-            List<Task> tasks = new List<Task>();
-            foreach (var path in paths)
-            {
-                Task t = Task.Run(() => {
-                    properties.Add(GetProperty(device, path));
-                });
-                tasks.Add(t);
-            }
-            Task.WaitAll(tasks.ToArray());
             return properties;
         }
 
@@ -146,16 +368,6 @@ namespace FileExtracter
         public Result GetFileInformation (string device, string path)
         {
             Result result = new Result();
-            try
-            {
-                result.filesProperty.Add(GetProperty(device, path));
-                result.success = true;
-            }
-            catch (Exception ex)
-            {
-                result.success = false;
-                result.errorMessage = ex.ToString();
-            }
             return result;
         }
 
@@ -163,34 +375,6 @@ namespace FileExtracter
         public Result ListDirecotry(string device, string path)
         {
             Result result = new Result();
-            try
-            {
-                FileProperty property = GetProperty(device, path);
-                if (property.type == Type.directory)
-                {
-                    var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
-                    for (int i = 0; i < items.Length; ++i)
-                    {
-                        items[i] = path + "/" + items[i];
-                    }
-                    // foreach(var item in paths)
-                    // {
-                    //     property = GetProperty(device, path + "/" + item);
-                    //     result.filesProperty.Add(property);
-                    // }
-                    result.filesProperty = GetProperties(device, items);
-                    result.success = true;
-                }
-                else
-                {
-                    throw new Exception("Wrong path!");
-                }
-            }
-            catch (Exception ex)
-            {
-                result.success = false;
-                result.errorMessage = ex.ToString();
-            }
             return result;
 
         }
@@ -198,25 +382,7 @@ namespace FileExtracter
         public Result SearchFiles(string device, string path, string pattern, Type fileType)
         {
             Result result = new Result();
-            try
-            {
-                var items = AdbHelper.AdbHelper.SearchFiles(device, pattern, path, (char)fileType);
-                // FileProperty property = new FileProperty();
-                // foreach(var item in items)
-                // {
-                //     property = GetProperty(device, item);
-                //     result.filesProperty.Add(property);
-                // }
-                result.filesProperty = GetProperties(device, items);
-                result.success = true;
-            }
-            catch (Exception ex)
-            {
-                result.success = false;
-                result.errorMessage = ex.ToString();
-            }
             return result;
-
         }
 
         public Result CopyFileFromDevice(string device, string devicePath, string pcPath)
@@ -236,4 +402,5 @@ namespace FileExtracter
             return result;
         }
     }
+    */
 }

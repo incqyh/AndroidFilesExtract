@@ -133,6 +133,33 @@ namespace AdbHelper
         }
 
         /// <summary>
+        /// 在设备中创建所需要的shell脚本
+        /// </summary>
+        /// <param name="deviceNo"></param>
+        /// <param name="shellCode"></param>
+        public static void CreateShellScript(string deviceNo, string scriptName, string shellCode)
+        {
+            string args = System.String.Format(@" -s {0} shell ""echo '{1}' >{2}""", deviceNo, shellCode, scriptName);
+            ProcessHelper.Run(AdbExePath, args);
+        }
+
+        /// <summary>
+        /// 运行shell命令
+        /// </summary>
+        /// <param name="deviceNo"></param>
+        /// <param name="cmd"></param>
+        public static string[] RunShell(string deviceNo, string cmd)
+        {
+            string args = " -s " + deviceNo + " shell \"" + cmd + "\"";
+            var result = ProcessHelper.Run(AdbExePath, args);
+            string[] items = new string[0];
+            if (result.OutputString == null)
+                return items;
+            items = result.OutputString.Split(new[] { "$", "#", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            return items;
+        }
+
+        /// <summary>
         /// 获取某目录下的文件
         /// </summary>
         /// <param name="path">路径</param>
@@ -158,12 +185,12 @@ namespace AdbHelper
         /// <param name="path">搜索路径</param>
         /// <param name="type">搜索类型</param>
         /// <returns></returns>
-        public static string[] SearchFiles(string deviceNo, string pattern, string path = "/", char type = ' ')
+        public static string[] SearchFiles(string deviceNo, string pattern, string path = "/", char type = 'a')
         {
             path = PathNormalize(path);
             string initArgs = " -s " + deviceNo + " shell ";
             string runArgs;
-            if (type == ' ')
+            if (type == 'a')
                 runArgs = "\"find " + path + " -name \\\"" + pattern + "\\\"\"";
             else 
                 runArgs = "\"find " + path + " -type " + type + " -name \\\"" + pattern + "\\\"\"";
