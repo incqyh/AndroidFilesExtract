@@ -80,32 +80,6 @@ namespace FileExtracter
             get { return devices; }
         }
 
-        FileProperty GetProperty(string device, string path)
-        {
-            FileProperty property = new FileProperty();
-
-            var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
-            string errorPattern = "No such file or directory";
-            if (items.Length != 0 && items[0].Contains(errorPattern))
-                throw new Exception("Wrong path!");
-            else
-            {
-                var rawData = AdbHelper.AdbHelper.GetProperty(device, path);
-                property.path = path;
-                property.modifyTime = rawData[5].Substring(8, rawData[5].Length - 8);
-                property.accessTime = rawData[4].Substring(8, rawData[4].Length - 8);
-
-                if (rawData[1].Contains("directory")) property.type = Type.directory;
-                if (rawData[1].Contains("regular")) property.type = Type.file;
-                if (rawData[1].Contains("symbol")) property.type = Type.link;
-
-                string sizePattern = @"(?<=Size: )\d*\b";
-                property.size = Regex.Matches(rawData[1], sizePattern)[0].ToString();
-            }
-
-            return property;
-        }
-
         List<FileProperty> ParaseProperties(string[] rawData)
         {
             List<FileProperty> result = new List<FileProperty>();
@@ -128,6 +102,23 @@ namespace FileExtracter
                 result.Add(property);
             }
             return result;
+        }
+
+        FileProperty GetProperty(string device, string path)
+        {
+            FileProperty property = new FileProperty();
+
+            var items = AdbHelper.AdbHelper.ListDataFolder(device, path);
+            string errorPattern = "No such file or directory";
+            if (items.Length != 0 && items[0].Contains(errorPattern))
+                throw new Exception("Wrong path!");
+            else
+            {
+                var rawData = AdbHelper.AdbHelper.GetProperty(device, path);
+                property =  ParaseProperties(rawData)[0];
+            }
+
+            return property;
         }
 
         public Result InitConnection()
@@ -299,11 +290,23 @@ namespace FileExtracter
 
         public Result CopyFileFromDevice(string device, string devicePath, string pcPath)
         {
+            if (!System.IO.Directory.Exists(pcPath))
+                System.IO.Directory.CreateDirectory(pcPath);
             Result result = new Result();
             try
             {
-                GetProperty(device, devicePath);
-                AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, pcPath);
+                FileProperty property = GetProperty(device, devicePath);
+                if (property.type == Type.fne)
+                    throw new Exception("Wrong path");
+                if (property.type == Type.directory)
+                {
+                    string fullPath = pcPath + '/' + property.path.Replace('/', '_');
+                    if (!System.IO.Directory.Exists(fullPath))
+                        System.IO.Directory.CreateDirectory(fullPath);
+                    AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, fullPath);
+                }
+                else
+                    AdbHelper.AdbHelper.CopyFromDevice(device, devicePath, pcPath);
                 result.success = true;
             }
             catch (Exception ex)

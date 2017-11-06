@@ -18,8 +18,8 @@ public class Example
         string testFile = "/init";
 
         // string[] testPaths = new string[2] { "/data", "/vendor"};
-        // var rd = feh.GetFileInformation(testDevice, testDir);
-        // var rf = feh.GetFileInformation(testDevice, testFile);
+        var rd = feh.GetFileInformation(testDevice, testDir);
+        var rf = feh.GetFileInformation(testDevice, testFile);
         // var rl = feh.ListDirecotry(testDevice, testDir);
         // var rs = feh.SearchFiles(testDevice, testDir, "*0*", FileExtracter.Type.alltype);
         // var rlv = feh.ListDirecotryVerbose(testDevice, testDir);
