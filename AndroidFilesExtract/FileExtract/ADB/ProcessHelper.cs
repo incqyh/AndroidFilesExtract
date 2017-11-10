@@ -5,8 +5,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
-namespace AdbHelper
-{ 
+namespace AAF.Library.Extracter.Android
+{
     public class ProcessHelper
     {
         private static Process GetProcess()
